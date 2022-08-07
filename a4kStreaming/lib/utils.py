@@ -54,9 +54,7 @@ class DictAsObject(dict):
         item = self.get(name, None)
         if isinstance(item, DictAsObject):
             return item
-        if isinstance(item, dict):
-            return DictAsObject(item)
-        return item
+        return DictAsObject(item) if isinstance(item, dict) else item
 
     def __setattr__(self, name, value):
         self[name] = value
@@ -99,24 +97,24 @@ def imdb_auth_request_props():
     return {
         'headers': {
             'content-type': 'application/json',
-            'x-amzn-sessionid': '%s-%s-%s' % (random_digit_str(3), random_digit_str(7), random_digit_str(7)),
+            'x-amzn-sessionid': f'{random_digit_str(3)}-{random_digit_str(7)}-{random_digit_str(7)}',
             'x-imdb-client-name': 'imdb-web-next',
             'x-imdb-user-language': 'en-US',
-            'x-imdb-user-country': 'US'
+            'x-imdb-user-country': 'US',
         },
         'cookies': {
-            'ubid-main': '%s-%s-%s' % (random_digit_str(3), random_digit_str(7), random_digit_str(7)),
+            'ubid-main': f'{random_digit_str(3)}-{random_digit_str(7)}-{random_digit_str(7)}',
             'at-main': kodi.get_setting('imdb.at-main'),
-        }
+        },
     }
 
 def rd_auth_query_params(core, rd_api_key=None):
-    rd_apikey = rd_api_key if rd_api_key else get_realdebrid_apikey(core)
-    return '?client_id=X245A4XAIBGVM&auth_token=%s' % rd_apikey
+    rd_apikey = rd_api_key or get_realdebrid_apikey(core)
+    return f'?client_id=X245A4XAIBGVM&auth_token={rd_apikey}'
 
 def ad_auth_query_params(core, ad_api_key=None):
-    ad_apikey = ad_api_key if ad_api_key else get_alldebrid_apikey(core)
-    return '&agent=%s&apikey=%s' % (core.kodi.addon_name, ad_apikey)
+    ad_apikey = ad_api_key or get_alldebrid_apikey(core)
+    return f'&agent={core.kodi.addon_name}&apikey={ad_apikey}'
 
 def time_ms():
     return int(round(time.time() * 1000))
@@ -169,17 +167,14 @@ def extract_zip(src, dest):
         zip_root = ''
         rename = False
 
-    if py2:
-        for info in infolist:
+    for info in infolist:
+        if py2:
             filename = info.filename.decode(default_encoding)
-            extract_zip_member(zip, filename, extract_dir)
-    else:
-        for info in infolist:
+        else:
             filename = info.filename
             if not info.flag_bits & zip_utf8_flag:
                 filename = info.filename.encode(py3_zip_missing_utf8_flag_fallback_encoding).decode(default_encoding)
-            extract_zip_member(zip, filename, extract_dir)
-
+        extract_zip_member(zip, filename, extract_dir)
     if rename:
         os.rename(os.path.join(extract_dir, zip_root), dest)
 
@@ -196,7 +191,7 @@ def get_alldebrid_apikey(core):
     return core.kodi.get_setting('alldebrid.apikey')
 
 def get_color_string(string, color):
-    return '[B][COLOR %s]%s[/COLOR][/B]' % (color, string)
+    return f'[B][COLOR {color}]{string}[/COLOR][/B]'
 
 def video_containers():
     return ['3GP', '3G2', 'ASF', 'WMV', 'AVI', 'DIVX', 'EVO', 'F4V', 'FLV', 'MKV', 'MK3D', 'MP4', 'M4V', 'MPG', 'MPEG', 'M2P', 'PS', 'TS', 'M2TS', 'MXF', 'OGG', 'OGV', 'OGX', 'MOV', 'QT', 'RMVB', 'VOB', 'WEBM']

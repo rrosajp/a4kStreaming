@@ -49,10 +49,7 @@ def start(api):
     player.onPlayBackEnded = lambda: mark_as_watched()
     player.onPlayBackStopped = lambda: mark_as_watched()
 
-    while not monitor.abortRequested():
-        if monitor.waitForAbort(2):
-            break
-
+    while not monitor.abortRequested() and not monitor.waitForAbort(2):
         if not update.last_check or core.time.time() - update.last_check >= 3600:
             update.last_check = core.time.time()
             thread = core.threading.Thread(target=core.provider, args=(core, core.utils.DictAsObject({ 'type': 'new_version_check', 'silent': True })))

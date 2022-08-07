@@ -14,7 +14,11 @@ news = root.find('./extension/news')
 changelog = news.text.strip() + '\n'
 
 tag_prefix = 'https://github.com/newt-sc/a4kStreaming/releases/tag/plugin.video.a4kstreaming%2Fplugin.video.a4kstreaming'
-changelog = re.sub(r'\[v(.*?)\]:', lambda m: '* [v%s](%s-%s):' % (m.group(1), tag_prefix, m.group(1)), changelog)
+changelog = re.sub(
+    r'\[v(.*?)\]:',
+    lambda m: f'* [v{m.group(1)}]({tag_prefix}-{m.group(1)}):',
+    changelog,
+)
 
 with open(changelog_path, 'w') as f:
   f.write(changelog)

@@ -37,11 +37,19 @@ def __new_version_check(core, params):
             core.kodi.notification('Latest version already installed')
         return
     if not params.silent:
-        core.kodi.notification('Installing new version v%s' % remote_meta.version)
-    __install(core, core.utils.DictAsObject({ 'install': 1, 'zip_url': '%s%s-%s.zip' % (remote_meta.update_directory, remote_meta.name, remote_meta.version) }))
+        core.kodi.notification(f'Installing new version v{remote_meta.version}')
+    __install(
+        core,
+        core.utils.DictAsObject(
+            {
+                'install': 1,
+                'zip_url': f'{remote_meta.update_directory}{remote_meta.name}-{remote_meta.version}.zip',
+            }
+        ),
+    )
 
 def __sources_module_name(core):
-    return 'providers.%s.en.%s' % (__meta(core).name, 'torrent')
+    return f'providers.{__meta(core).name}.en.torrent'
 
 def __update_config(core):
     provider = core.cache.get_provider()
@@ -63,23 +71,24 @@ def __update_config(core):
 def __install(core, params):
     global __meta_data
 
-    if params.init:
-        if core.os.path.exists(core.utils.provider_data_dir) and core.os.path.exists(core.utils.provider_sources_dir) and core.os.path.exists(core.utils.provider_modules_dir):
-            __update_config(core)
-            return
+    if (
+        params.init
+        and core.os.path.exists(core.utils.provider_data_dir)
+        and core.os.path.exists(core.utils.provider_sources_dir)
+        and core.os.path.exists(core.utils.provider_modules_dir)
+    ):
+        __update_config(core)
+        return
 
     zip_name = 'provider.zip'
     zip_perm_path = core.os.path.join(core.kodi.addon_profile, zip_name)
 
     try:
         if not params.init:
-            if params.install:
-                selection = params.install
-            else:
-                selection = core.kodi.xbmcgui.Dialog().select(
-                    'Install provider',
-                    ['From File', 'From URL'],
-                )
+            selection = params.install or core.kodi.xbmcgui.Dialog().select(
+                'Install provider',
+                ['From File', 'From URL'],
+            )
 
             zip_path = None
             if selection == 0:
@@ -126,7 +135,10 @@ def __install(core, params):
         __update_config(core)
 
         if not params.init:
-            core.kodi.notification('%s installed v%s' % (__meta(core).name, __meta(core).version))
+            core.kodi.notification(
+                f'{__meta(core).name} installed v{__meta(core).version}'
+            )
+
     except Exception as e:
         if not params.init:
             core.kodi.notification('Something went wrong. Check logs')
@@ -139,20 +151,19 @@ def __manage(core, params):
         return
 
     provider = core.cache.get_provider()
-    sources = list(provider.keys())
-    sources.sort()
-
+    sources = sorted(provider.keys())
     multiselect = core.kodi.xbmcgui.Dialog().multiselect(
-        '%s v%s' % (__meta(core).name, __meta(core).version),
+        f'{__meta(core).name} v{__meta(core).version}',
         sources,
-        preselect=[i for i, key in enumerate(sources) if provider[key]]
+        preselect=[i for i, key in enumerate(sources) if provider[key]],
     )
+
 
     if not multiselect:
         return
 
     for i, key in enumerate(sources):
-        provider[key] = True if i in multiselect else False
+        provider[key] = i in multiselect
 
     core.cache.save_provider(provider)
 

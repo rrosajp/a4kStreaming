@@ -9,9 +9,10 @@ def __trakt_request(core, endpoint, type):
 
     request = {
         'method': 'GET',
-        'url': 'https://api.trakt.tv/users/%s/%s/%s' % (core.kodi.get_setting('trakt.username'), endpoint, type),
-        'headers': headers
+        'url': f"https://api.trakt.tv/users/{core.kodi.get_setting('trakt.username')}/{endpoint}/{type}",
+        'headers': headers,
     }
+
 
     response = core.request.execute(core, request)
     if response.status_code != 200:
@@ -54,7 +55,7 @@ def __migrate_status(core, params):
         def update_progress():
             msg = [state.progress_msg]
             if state.target:
-                target = 'Show: %s' % state.target
+                target = f'Show: {state.target}'
                 if core.utils.py2:
                     msg.append(target)
                 else:
@@ -80,7 +81,7 @@ def __migrate_status(core, params):
                     if not ratings[i]:
                         unrated_ids.append(id)
                 except:
-                    core.logger.notice('error transfering set of ids starting with %s' % id)
+                    core.logger.notice(f'error transfering set of ids starting with {id}')
                     return
 
             for chunk in core.utils.chunk(unrated_ids, 50):
@@ -232,20 +233,23 @@ def __migrate_collections(core, params):
         }
 
         target_lists = {}
-        for key in required_lists.keys():
+        for key in required_lists:
             required_list = required_lists[key]
             matching_imdb_lists = [imdb_list for imdb_list in imdb_lists if required_list.lower() == imdb_list['name'].lower()]
-            if len(matching_imdb_lists) == 0:
-                core.kodi.notification('No matching lists in IMDb for %s' % required_list)
+            if not matching_imdb_lists:
+                core.kodi.notification(f'No matching lists in IMDb for {required_list}')
                 return
             elif len(matching_imdb_lists) > 1:
-                core.kodi.notification('More than one matching lists found in IMDb for %s' % required_list)
+                core.kodi.notification(
+                    f'More than one matching lists found in IMDb for {required_list}'
+                )
+
                 return
 
             target_lists[key] = matching_imdb_lists[0]
 
         def add_to_list(type):
-            type_plural = type + 's'
+            type_plural = f'{type}s'
             trakt_collection = __trakt_request(core, 'collection', type_plural)
             ids = [title[type]['ids']['imdb'] for title in trakt_collection]
             current = 0

@@ -30,7 +30,7 @@ def execute(core, request, session=None):
     if next:
         request.pop('stream', None)
 
-    logger.debug('%s ^ - %s' % (request['method'], request['url']))
+    logger.debug(f"{request['method']} ^ - {request['url']}")
     try:
         response = session.request(verify=False, **request)
         exc = ''
@@ -40,15 +40,16 @@ def execute(core, request, session=None):
         response.text = ''
         response.content = ''
         response.status_code = 500
-    logger.debug('%s $ - %s - %s, %s' % (request['method'], request['url'], response.status_code, exc))
+    logger.debug(
+        f"{request['method']} $ - {request['url']} - {response.status_code}, {exc}"
+    )
 
-    alt_request = validate(response)
-    if alt_request:
+
+    if alt_request := validate(response):
         return execute(core, alt_request)
 
     if next and response.status_code == 200:
-        next_request = next(response)
-        if next_request:
+        if next_request := next(response):
             return execute(core, next_request)
         else:
             return None
