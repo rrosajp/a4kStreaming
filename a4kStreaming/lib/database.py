@@ -38,17 +38,18 @@ def __hash_function(function_instance, *args):
     return __get_function_name(function_instance) + __generate_md5(args)
 
 def __get_or_add(key, value, fn, duration, *args, **kwargs):
-    key = __hash_function(fn, *args) if not key else key
+    key = key or __hash_function(fn, *args)
     if not value:
         data = __cache_get(key)
-        if data:
-            if not duration or time.time() - data['t'] < (duration * 60):
-                return data['v']
+        if data and (
+            not duration or time.time() - data['t'] < (duration * 60)
+        ):
+            return data['v']
 
     if not value and not fn:
         return None
 
-    value = fn(*args, **kwargs) if not value else value
+    value = value or fn(*args, **kwargs)
     data = { 't': time.time(), 'v': value }
     __cache_save(key, data)
     return value

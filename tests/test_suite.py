@@ -78,7 +78,7 @@ def __invoke(a4kstreaming_api, action, params={}, settings={}, prerun=None, remo
         'trakt.clientid': trakt_apikey,
         'trakt.username': trakt_username,
     }
-    fn.settings.update(settings)
+    fn.settings |= settings
 
     if prerun:
         prerun()

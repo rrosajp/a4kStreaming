@@ -15,7 +15,7 @@ except AttributeError:
 
 class _Bytecode:
     def __init__(self):
-        code = (lambda: x if x else y).__code__.co_code
+        code = (lambda: x or y).__code__.co_code
         opcode, oparg = struct.unpack_from('BB', code, 2)
 
         # Starting with Python 3.6, the bytecode format has changed, using
@@ -110,13 +110,12 @@ def _get_instruction_size(opname, oparg=0):
 
 
 def _get_instructions_size(ops):
-    size = 0
-    for op in ops:
-        if isinstance(op, str):
-            size += _get_instruction_size(op)
-        else:
-            size += _get_instruction_size(*op)
-    return size
+    return sum(
+        _get_instruction_size(op)
+        if isinstance(op, str)
+        else _get_instruction_size(*op)
+        for op in ops
+    )
 
 
 def _write_instruction(buf, pos, opname, oparg=0):
@@ -212,9 +211,7 @@ def _patch_code(code):
         if origin_stack[:target_depth] != target_stack:
             raise SyntaxError('Jump into different block')
 
-        ops = []
-        for i in range(len(origin_stack) - target_depth):
-            ops.append('POP_BLOCK')
+        ops = ['POP_BLOCK' for _ in range(len(origin_stack) - target_depth)]
         ops.append(('JUMP_ABSOLUTE', target // _BYTECODE.jump_unit))
 
         if pos + _get_instructions_size(ops) > end:

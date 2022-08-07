@@ -7,26 +7,26 @@ __action_menu_style = '[COLOR white][B]%s[/B][/COLOR]'
 def __get_season_title(core, season, year, episodes):
     season_template = core.kodi.get_setting('general.season_title_template')
     if season_template == '1':
-        return 'Season %s (%s)' % (season, year)
+        return f'Season {season} ({year})'
     if season_template == '2':
-        return 'Season %s' % season
+        return f'Season {season}'
     if season_template == '3':
-        return 'Season %s - %s Episodes' % (season, episodes)
-    return 'Season %s (%s) - %s Episodes' % (season, year, episodes)
+        return f'Season {season} - {episodes} Episodes'
+    return f'Season {season} ({year}) - {episodes} Episodes'
 
 def __get_episode_title(core, season, episode, title):
     season_template = core.kodi.get_setting('general.episode_title_template')
     season_zfill = str(season).zfill(2)
     episode_zfill = str(episode).zfill(2)
     if season_template == '1':
-        return '%s. %s' % (episode, title)
+        return f'{episode}. {title}'
     if season_template == '2':
-        return 'E%s. %s' % (episode_zfill, title)
+        return f'E{episode_zfill}. {title}'
     if season_template == '3':
-        return '%sx%s. %s' % (season_zfill, episode_zfill, title)
+        return f'{season_zfill}x{episode_zfill}. {title}'
     if season_template == '4':
-        return 'S%sE%s. %s' % (season_zfill, episode_zfill, title)
-    return '%s' % title
+        return f'S{season_zfill}E{episode_zfill}. {title}'
+    return f'{title}'
 
 def __handle_request_error(core, params, response=None):
     if not params.silent:
@@ -47,8 +47,13 @@ def __set_wide_image_as_primary(title):
     if title_images and len(title_images) > 0:
         if title['primaryImage']:
             title_images.insert(0, title['primaryImage'])
-        wide_images = list(filter(lambda v: v['width'] > v['height'] and v.get('type', None) != 'poster', title_images))
-        if len(wide_images) > 0:
+        if wide_images := list(
+            filter(
+                lambda v: v['width'] > v['height']
+                and v.get('type', None) != 'poster',
+                title_images,
+            )
+        ):
             title['primaryImage'] = wide_images[0]
 
 def __set_title_contextmenu(core, title, list_item):
@@ -63,15 +68,29 @@ def __set_title_contextmenu(core, title, list_item):
     tvseries = titleType == 'tvSeries'
     has_rating = title.get('userRating', None) is not None
     context_menu_items = [
-        ('IMDb: %s rating' % ('Update' if has_rating else 'Set'), 'RunPlugin(%s?action=profile&type=rate&id=%s)' % (core.url, title['id'])),
-        ('IMDb: Trailer', 'RunPlugin(%s?action=trailer&id=%s&vi=%s&play=true)' % (core.url, title['id'], trailer)),
-        ('IMDb: Cast & Crew', 'ActivateWindow(Videos,%s?action=query&type=browse&id=%s,return)' % (core.url, title['id'])),
+        (
+            f"IMDb: {'Update' if has_rating else 'Set'} rating",
+            f"RunPlugin({core.url}?action=profile&type=rate&id={title['id']})",
+        ),
+        (
+            'IMDb: Trailer',
+            f"RunPlugin({core.url}?action=trailer&id={title['id']}&vi={trailer}&play=true)",
+        ),
+        (
+            'IMDb: Cast & Crew',
+            f"ActivateWindow(Videos,{core.url}?action=query&type=browse&id={title['id']},return)",
+        ),
     ]
+
 
     if titleType != 'tvEpisode':
         context_menu_items.append(
-            ('IMDb: More like this', 'ActivateWindow(Videos,%s?action=query&type=more_like_this&id=%s,return)' % (core.url, title['id']))
+            (
+                'IMDb: More like this',
+                f"ActivateWindow(Videos,{core.url}?action=query&type=more_like_this&id={title['id']},return)",
+            )
         )
+
 
     if not tvseries:
         if has_rating:
@@ -80,33 +99,68 @@ def __set_title_contextmenu(core, title, list_item):
                 'playcount': 1
             })
             context_menu_items.append(
-                ('IMDb: Mark as unwatched', 'RunPlugin(%s?action=profile&type=mark_as_unwatched&id=%s)' % (core.url, title['id']))
+                (
+                    'IMDb: Mark as unwatched',
+                    f"RunPlugin({core.url}?action=profile&type=mark_as_unwatched&id={title['id']})",
+                )
             )
+
         else:
             context_menu_items.append(
-                ('IMDb: Mark as watched', 'RunPlugin(%s?action=profile&type=mark_as_watched&id=%s)' % (core.url, title['id']))
+                (
+                    'IMDb: Mark as watched',
+                    f"RunPlugin({core.url}?action=profile&type=mark_as_watched&id={title['id']})",
+                )
             )
 
-    context_menu_items.extend([
-        ('IMDb: Add to watchlist', 'RunPlugin(%s?action=profile&type=watchlist_add&id=%s)' % (core.url, title['id'])),
-        ('IMDb: Remove from watchlist', 'RunPlugin(%s?action=profile&type=watchlist_remove&id=%s)' % (core.url, title['id'])),
-        ('IMDb: Add to list', 'RunPlugin(%s?action=profile&type=list_add&id=%s)' % (core.url, title['id'])),
-        ('IMDb: Remove from list', 'RunPlugin(%s?action=profile&type=list_remove&id=%s)' % (core.url, title['id'])),
-    ])
+
+    context_menu_items.extend(
+        [
+            (
+                'IMDb: Add to watchlist',
+                f"RunPlugin({core.url}?action=profile&type=watchlist_add&id={title['id']})",
+            ),
+            (
+                'IMDb: Remove from watchlist',
+                f"RunPlugin({core.url}?action=profile&type=watchlist_remove&id={title['id']})",
+            ),
+            (
+                'IMDb: Add to list',
+                f"RunPlugin({core.url}?action=profile&type=list_add&id={title['id']})",
+            ),
+            (
+                'IMDb: Remove from list',
+                f"RunPlugin({core.url}?action=profile&type=list_remove&id={title['id']})",
+            ),
+        ]
+    )
+
 
     if not tvseries:
-        context_menu_items.extend([
-            ('Debrid: Add sources', 'RunPlugin(%s?action=cache_sources&id=%s)' % (core.url, title['id']))
-        ])
+        context_menu_items.extend(
+            [
+                (
+                    'Debrid: Add sources',
+                    f"RunPlugin({core.url}?action=cache_sources&id={title['id']})",
+                )
+            ]
+        )
+
         if core.kodi.get_bool_setting('general.autoplay'):
-            context_menu_items.extend([
-                ('Force source select', 'PlayMedia(%s?action=play&id=%s&force_sourceselect=true)' % (core.url, title['id']))
-            ])
+            context_menu_items.extend(
+                [
+                    (
+                        'Force source select',
+                        f"PlayMedia({core.url}?action=play&id={title['id']}&force_sourceselect=true)",
+                    )
+                ]
+            )
+
 
     list_item.addContextMenuItems(context_menu_items)
 
 def __generate_mutation_query(action, ids, vars=''):
-    vars = 'fn(%s) ' % vars if vars else 'fn'
+    vars = f'fn({vars}) ' if vars else 'fn'
     result = '''
                     '''.join([action % (id, id) for id in ids])
     result = '''

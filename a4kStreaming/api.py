@@ -20,7 +20,7 @@ class A4kStreamingApi(object):
             'xbmcvfs': False,
         }
 
-        api_mode.update(mocks)
+        api_mode |= mocks
         os.environ[api_mode_env_name] = json.dumps(api_mode)
         self.core = importlib.import_module('a4kStreaming.core')
 

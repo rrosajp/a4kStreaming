@@ -23,7 +23,7 @@ git_last_commit_cmd = subprocess.Popen(command_args,
 
 git_stdout, _ = git_last_commit_cmd.communicate()
 commit_message = git_stdout.strip().decode('utf8')
-print('Commit: `%s`' % commit_message)
+print(f'Commit: `{commit_message}`')
 os.system('echo "::set-output name=commit::%s"' % commit_message)
 
 if is_pull_request and github['event']['pull_request']['commits'] > 1:
@@ -54,6 +54,6 @@ if addon_xml_version != version:
     sys.exit(1)
 
 news = root.find('./extension/news').text.strip()
-if not news.startswith('[v%s]:' % version):
+if not news.startswith(f'[v{version}]:'):
     print('Error: Update changelog in the news element of addon.xml!')
     sys.exit(1)
